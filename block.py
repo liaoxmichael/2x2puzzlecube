@@ -19,8 +19,8 @@ class Block:
         self.coords = [x, y, z] # known position
         self.faces = [faceX, faceY, faceZ] # known orientation
 
-    def setNeighbors(self, Xblock, Yblock, Zblock): 
-        self.neighbors = [Xblock, Yblock, Zblock]
+    def setNeighbors(self, blockX, blockY, blockZ): 
+        self.neighbors = [blockX, blockY, blockZ]
 
     def setCoords(self, x, y, z):
         self.coords = [x, y, z]
