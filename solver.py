@@ -2,16 +2,59 @@
 # CSC 372 Artificial Intelligence
 # A1
 ''' Description: 
-    This file will eventually hold the IDA* algorithm we'll use to search
-    through possible cube solves and find an optimal solution. For now, it holds
-    a main function that enables user interaction through the terminal.
+    This file holds the IDA* solver of the cube, repeating 10 times on cubes
+    scrambled with an increasing amount of moves (until the program fails to
+    find a solution!). It relies on creating a Solver object, which takes in
+    an instance of a Cube, and a file to write to. These are all specified
+    for the trials ahead in main().
 '''
-import queue
 from cube import Cube
+from nodes import Node
+import time # to assist in calculating time taken of algorithm in lab trials
 class Solver:
-    pass
+    cube = Cube
+    root = Node
+    output_file = __file__
+
+    def __init__(self, cube, output_file):
+        self.output_file = output_file
+        self.cube = cube
+        self.root = Node(-1,None,0,cube) # instantiates with a root node in the tree
+    
+    def DLS(self, limit): # depth-limited search; should unfold until all children have f-scores greater than limit (float)
+        i=0
+        prev_best=1
+        frontier = [self.root]
+        while(i<prev_best):
+            current = frontier.pop()
+            if self.cube.check():
+                self.output_file.write() # should write nodes visited 
+                return current
+            else:
+                for j in range(6):
+                    frontier.append(Node(j,current,current.depth+1,self.cube))
+
+    def IDA(self): # IDA*, will call DLS repeatedly and increase limit to the best f-score of the previous iteration
+        # should return a node with solved cube that can be traced along its parent-chain to find solution
+        nodesVisited = 0 # will print this out before the function finishes
+        pass
     
 def main():
+    result_file = open("results.txt", "w")
+    start_states = [] # should store all the start states of cubes as we scramble them
+    solutions = [] # should store all solution nodes found
+    for i in range(100): # increasing complexity of scrambled cubes
+        for j in range(10): # repeating 10 trials
+            result_file.write() # indicate what complexity + trial # this is
+            start = time.time_ns()
+            newCube = Cube().scramble(i)
+            start_states.append(newCube)
+            solutions.append(Solver(newCube,result_file).IDA())
+            end = time.time_ns() # time taken for a given trial will be end-start
+            result_file.write() # print out time taken
+    
+    result_file.close()
+    ''' # Earlier interactive menu code. Now unneccesary
     cube = Cube()
     print("Use standard cube notation to rotate cube clockwise (F, B, R, L, U, D).")
     print("Add a ' symbol (read: prime) to indicate counter-clockwise, and 2 to rotate twice.")
@@ -88,4 +131,5 @@ def menu(choice, cube):
             return "Rotating D2."
         case _:
             return "I didn't understand that."
-main()
+#main()
+'''
