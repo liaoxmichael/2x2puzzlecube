@@ -70,8 +70,30 @@ class Cube:
     potential orientation shifts (cube that is solved but rotated along XY
     plane should pass test!)
     '''
-    def check(self): # if these two opposite cubelets (in solved state) have proper neighbors, then cube is solved
-        return Counter(self.blocks_tuple[0].neighbors) == Counter([self.blocks_tuple[4], self.blocks_tuple[2], self.blocks_tuple[1]]) and Counter(self.blocks_tuple[7].neighbors) == Counter([self.blocks_tuple[3], self.blocks_tuple[5], self.blocks_tuple[6]])
+    def check(self): # NEW 03/04/23: need to check ALL cubelet's neighbors, so creating a dict and iterating thru it to ensure that neighbors are valid
+        proper_neighbors = {
+            self.blocks_tuple[0]: [self.blocks_tuple[4], self.blocks_tuple[2], self.blocks_tuple[1]],
+            self.blocks_tuple[1]: [self.blocks_tuple[5], self.blocks_tuple[3], self.blocks_tuple[0]],
+            self.blocks_tuple[2]: [self.blocks_tuple[6], self.blocks_tuple[0], self.blocks_tuple[3]],
+            self.blocks_tuple[3]: [self.blocks_tuple[7], self.blocks_tuple[1], self.blocks_tuple[2]],
+            self.blocks_tuple[4]: [self.blocks_tuple[0], self.blocks_tuple[6], self.blocks_tuple[5]],
+            self.blocks_tuple[5]: [self.blocks_tuple[1], self.blocks_tuple[7], self.blocks_tuple[4]],
+            self.blocks_tuple[6]: [self.blocks_tuple[2], self.blocks_tuple[4], self.blocks_tuple[7]],
+            self.blocks_tuple[7]: [self.blocks_tuple[3], self.blocks_tuple[5], self.blocks_tuple[6]]
+        }
+        for block in self.blocks_tuple: # checks if neighbors are correct
+            if Counter(block.neighbors) != Counter(proper_neighbors[block]):
+                return False
+            if block.faces[0] != block.neighbors[1].faces[0] or block.faces[0] != block.neighbors[2].faces[0]: # x faces should be same for yz neighbors
+                #print(block.faces, " vs. y neighbor ", block.neighbors[1].faces, " and z neighbor ", block.neighbors[2].faces) # debug
+                return False
+            if block.faces[1] != block.neighbors[0].faces[1] or block.faces[1] != block.neighbors[2].faces[1]: # y faces should be same for xz neighbors
+                #print(block.faces, " vs. x neighbor ", block.neighbors[0].faces, " and z neighbor ", block.neighbors[2].faces) # debug
+                return False
+            if block.faces[2] != block.neighbors[0].faces[2] or block.faces[2] != block.neighbors[1].faces[2]: # z faces should be same for xy neighbors
+                #print(block.faces, " vs. x neighbor ", block.neighbors[0].faces, " and y neighbor ", block.neighbors[1].faces) # debug
+                return False
+        return True
 
     def scramble(self, k): # performs k quarter-turn moves on the cube to randomize it
         random_action = random.randint(0,11)
@@ -81,7 +103,7 @@ class Cube:
             while random_action == (prev_action + 6) % 12: # +6 % 12 is the u-turn move so we must avoid it
                 random_action = random.randint(0,11)
             self.actions[random_action](self)
-            # print(self.actions[random_action]) # debug code to make sure we're not getting u-turns
+            #print(self.actions[random_action]) # debug code to make sure we're not getting u-turns
 
     def display(self): # for some reason graphics library won't run in vscode so: instead,
         # we should have a running menu in console that takes in data to run commands
@@ -315,4 +337,23 @@ class Cube:
                 block.swapFaces('x', 'z') # due to 90 deg rotation, yz swap on all cubelets moved
         self.updateNeighbors()
 
-    actions = [frontCW, backCW, rightCW, leftCW, topCW, bottomCW, frontCCW,  backCCW, rightCCW,  leftCCW, topCCW, bottomCCW] # list created to
+    actions = [frontCW, backCW, rightCW, leftCW, topCW, bottomCW, frontCCW,  backCCW, rightCCW,  leftCCW, topCCW, bottomCCW] # list created to facilitate random scrambling
+
+    def deepCopy(self):
+        copy = Cube()
+        copy.blocks_tuple = (self.blocks_tuple[0].deepCopy(), self.blocks_tuple[1].deepCopy(), self.blocks_tuple[2].deepCopy(), self.blocks_tuple[3].deepCopy(), self.blocks_tuple[4].deepCopy(), self.blocks_tuple[5].deepCopy(), self.blocks_tuple[6].deepCopy(), self.blocks_tuple[7].deepCopy())
+        for block in copy.blocks_tuple:
+            binary = ""
+            for coord in block.coords:
+                binary += str(coord)
+            copy.blocks[int(binary,2)] = block
+        copy.blocks[0].setNeighbors(copy.blocks[4], copy.blocks[2], copy.blocks[1])
+        copy.blocks[1].setNeighbors(copy.blocks[5], copy.blocks[3], copy.blocks[0])
+        copy.blocks[2].setNeighbors(copy.blocks[6], copy.blocks[0], copy.blocks[3])
+        copy.blocks[3].setNeighbors(copy.blocks[7], copy.blocks[1], copy.blocks[2])
+        copy.blocks[4].setNeighbors(copy.blocks[0], copy.blocks[6], copy.blocks[5])
+        copy.blocks[5].setNeighbors(copy.blocks[1], copy.blocks[7], copy.blocks[4])
+        copy.blocks[6].setNeighbors(copy.blocks[2], copy.blocks[4], copy.blocks[7])
+        copy.blocks[7].setNeighbors(copy.blocks[3], copy.blocks[5], copy.blocks[6])
+        
+        return copy

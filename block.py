@@ -39,3 +39,8 @@ class Block:
         self.faces[direction1] = self.faces[direction2]
         self.faces[direction2] = temp                                  
 
+    def deepCopy(self):
+        copy = Block(self.coords[0], self.coords[1], self.coords[2], self.faces[0], self.faces[1], self.faces[2])
+        # setNeighbors when outside?
+        copy.setCoords(self.coords[0], self.coords[1], self.coords[2])
+        return copy

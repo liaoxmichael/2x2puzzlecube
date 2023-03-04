@@ -9,7 +9,7 @@
     for the trials ahead in main().
 '''
 from cube import Cube
-from nodes import Node
+from nodesNoHeuristic import Node
 import time # to assist in calculating time taken of algorithm in lab trials
 import math # to help in finding min_fscore
 class Solver:
@@ -32,7 +32,7 @@ class Solver:
                 for j in range(6):
                     if current.action != 5-j: # because of symmetry in action_map, we can use 5-j to find the u-turn move
                         frontier.append(Node(j,current,current.depth+1,current.cube))
-            else: # depth exceeds limit, want to generate children but not reprocess them
+            else: # depth exceeds limit, want to generate children
                 for j in range(6):
                     if current.action != 5-j: # because of symmetry in action_map, we can use 5-j to find the u-turn move
                         overflow.append(Node(j,current,current.depth+1,current.cube))
@@ -44,6 +44,7 @@ class Solver:
         return None, nodes_expanded, min_fscore # returning the best f-score that surpassed limit to use as new limit
 
     def IDA(self): # IDA* will call DLS repeatedly and increase limit to the best f-score of the previous iteration
+        # should return a node with solved cube that can be traced along its parent-chain to find solution
         total_nodes_expanded = 0
         result = None
         new_limit = 1
@@ -51,7 +52,7 @@ class Solver:
             result, nodes_expanded, new_limit = self.DLS(new_limit)
             total_nodes_expanded += nodes_expanded
         self.output_file.write(str(total_nodes_expanded) + ",")
-        return result # should return a node with solved cube that can be traced along its parent-chain to find solution
+        return result
 
 def getSolution(solution=Node):
         solution = []
@@ -64,7 +65,7 @@ def getSolution(solution=Node):
             result_string += string + " "
 
 def main():
-    result_file = open("results.csv", "w")
+    result_file = open("resultsNoHeuristic.csv", "w")
     result_file.write("depth,nodes,time (ns)\n") # format as csv
     start_states = [] # should store all the start states of cubes as we scramble them
     solutions = [] # should store all solution nodes found
