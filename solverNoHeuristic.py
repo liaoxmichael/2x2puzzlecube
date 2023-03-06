@@ -15,39 +15,36 @@ import math # to help in finding min_fscore
 class Solver:
     cube = Cube
     output_file = __file__
+    root = Node
 
     def __init__(self, cube, output_file):
         self.output_file = output_file
         self.cube = cube
+        self.root = Node(-1,None,0,self.cube)
     
     def DLS(self, limit): # depth-limited search; should unfold until all children have f-scores greater than limit (float)
-        frontier = [Node(-1,None,0,self.cube)] # root node
-        overflow = []
+        frontier = [self.root] # root node
         nodes_expanded = 0
+        min_fscore = math.inf
         while frontier != []:
             current = frontier.pop()
             if current.cube.check():
                 return current, nodes_expanded, -1
-            elif current.depth < limit:
+            elif current.fscore <= limit:
                 for j in range(6):
                     if current.action != 5-j: # because of symmetry in action_map, we can use 5-j to find the u-turn move
                         frontier.append(Node(j,current,current.depth+1,current.cube))
-            else: # depth exceeds limit, want to generate children
-                for j in range(6):
-                    if current.action != 5-j: # because of symmetry in action_map, we can use 5-j to find the u-turn move
-                        overflow.append(Node(j,current,current.depth+1,current.cube))
+            else: # depth exceeds limit, want to generate children but not reprocess them 
+                if current.fscore < min_fscore:
+                    min_fscore = current.fscore
             nodes_expanded += 1
-        min_fscore = math.inf
-        for node in overflow:
-            if node.fscore < min_fscore and node.fscore > limit:
-                min_fscore = node.fscore
         return None, nodes_expanded, min_fscore # returning the best f-score that surpassed limit to use as new limit
 
     def IDA(self): # IDA* will call DLS repeatedly and increase limit to the best f-score of the previous iteration
         # should return a node with solved cube that can be traced along its parent-chain to find solution
         total_nodes_expanded = 0
         result = None
-        new_limit = 1
+        new_limit = self.root.fscore
         while result is None:
             result, nodes_expanded, new_limit = self.DLS(new_limit)
             total_nodes_expanded += nodes_expanded
@@ -65,13 +62,15 @@ def getSolution(solution=Node):
             result_string += string + " "
 
 def main():
-    result_file = open("resultsNoHeuristic.csv", "w")
+    result_file = open("resultsNoHeuristic.csv", "a")
     result_file.write("depth,nodes,time (ns)\n") # format as csv
+    result_file.close()
     start_states = [] # should store all the start states of cubes as we scramble them
     solutions = [] # should store all solution nodes found
     # remember to set back to size 0
-    for i in range(1,32): # increasing complexity of scrambled cubes; should be max depth 14, so this might be overkill, but just to be safe
+    for i in range(17): # increasing complexity of scrambled cubes; should be max depth 14, so this might be overkill, but just to be safe
         for j in range(10): # repeating 10 trials
+            result_file = open("resultsNoHeuristic.csv", "a")
             result_file.write(str(i) + ",")
             start = time.time_ns()
             newCube = Cube()
@@ -81,8 +80,10 @@ def main():
             solutions.append(result)
             end = time.time_ns() # time taken for a given trial will be end-start
             result_file.write(str(end-start) + "\n") # print out time taken
+            result_file.close()
+        result_file = open("resultsNoHeuristic.csv", "a")
         result_file.write(",,\n") # add additional row for averaging w/ spreadsheet later
-    result_file.close()
+        result_file.close()
 
     ''' # Earlier interactive menu code. Now unneccesary
     cube = Cube()
